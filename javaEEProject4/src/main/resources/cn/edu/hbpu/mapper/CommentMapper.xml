@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.hbpu.mapper.CommentMapper">
+
+    <resultMap id="BaseResultMap" type="cn.edu.hbpu.pojo.Comment">
+            <id property="cid" column="cid" jdbcType="INTEGER"/>
+            <result property="uid" column="uid" jdbcType="INTEGER"/>
+            <result property="bid" column="bid" jdbcType="INTEGER"/>
+            <result property="time" column="time" jdbcType="TIMESTAMP"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="oid" column="oid" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        cid,uid,bid,
+        time,content,oid
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from comment
+        where  cid = #{cid,jdbcType=INTEGER} 
+    </select>
+
+    <select id="selectByContent" resultType="cn.edu.hbpu.pojo.Comment">
+        select cid,content from comment where content like concat('%',#{content},'%')
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from comment
+        where  cid = #{cid,jdbcType=INTEGER} 
+    </delete>
+    <insert id="insert" keyColumn="cid" keyProperty="cid" parameterType="cn.edu.hbpu.pojo.Comment" useGeneratedKeys="true">
+        insert into comment
+        ( cid,uid,bid
+        ,time,content,oid
+        )
+        values (#{cid,jdbcType=INTEGER},#{uid,jdbcType=INTEGER},#{bid,jdbcType=INTEGER}
+        ,#{time,jdbcType=TIMESTAMP},#{content,jdbcType=VARCHAR},#{oid,jdbcType=INTEGER}
+        )
+    </insert>
+    <insert id="insertSelective" keyColumn="cid" keyProperty="cid" parameterType="cn.edu.hbpu.pojo.Comment" useGeneratedKeys="true">
+        insert into comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="cid != null">cid,</if>
+                <if test="uid != null">uid,</if>
+                <if test="bid != null">bid,</if>
+                <if test="time != null">time,</if>
+                <if test="content != null">content,</if>
+                <if test="oid != null">oid,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="cid != null">#{cid,jdbcType=INTEGER},</if>
+                <if test="uid != null">#{uid,jdbcType=INTEGER},</if>
+                <if test="bid != null">#{bid,jdbcType=INTEGER},</if>
+                <if test="time != null">#{time,jdbcType=TIMESTAMP},</if>
+                <if test="content != null">#{content,jdbcType=VARCHAR},</if>
+                <if test="oid != null">#{oid,jdbcType=INTEGER},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="cn.edu.hbpu.pojo.Comment">
+        update comment
+        <set>
+                <if test="uid != null">
+                    uid = #{uid,jdbcType=INTEGER},
+                </if>
+                <if test="bid != null">
+                    bid = #{bid,jdbcType=INTEGER},
+                </if>
+                <if test="time != null">
+                    time = #{time,jdbcType=TIMESTAMP},
+                </if>
+                <if test="content != null">
+                    content = #{content,jdbcType=VARCHAR},
+                </if>
+                <if test="oid != null">
+                    oid = #{oid,jdbcType=INTEGER},
+                </if>
+        </set>
+        where   cid = #{cid,jdbcType=INTEGER} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="cn.edu.hbpu.pojo.Comment">
+        update comment
+        set 
+            uid =  #{uid,jdbcType=INTEGER},
+            bid =  #{bid,jdbcType=INTEGER},
+            time =  #{time,jdbcType=TIMESTAMP},
+            content =  #{content,jdbcType=VARCHAR},
+            oid =  #{oid,jdbcType=INTEGER}
+        where   cid = #{cid,jdbcType=INTEGER} 
+    </update>
+</mapper>

@@ -1,0 +1,24 @@
+# Java / Maven
+javaEEProject4/target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Node / Vue
+vue/node_modules/
+vue/dist/
+
+# Logs
+*.log
+logs/
+
+# Navicat
+*.ncx
+
+# OS
+Thumbs.db
+.DS_Store
