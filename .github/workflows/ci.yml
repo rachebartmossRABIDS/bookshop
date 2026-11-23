@@ -94,6 +94,20 @@ jobs:
             tail -80 backend.log 2>/dev/null || echo '(missing)'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '--health--'
+            curl -sS -m 5 http://localhost:8090/project1/kind/list || echo 'BACKEND_DOWN'
+            echo
+            echo '--mysql--'
+            mysql -h 127.0.0.1 -uroot -proot -e 'select count(*) from bookshop.book' 2>&1 || echo 'MYSQL_DOWN'
+            echo '--smoke-fails--'
+            grep '^FAIL' smoke-output.txt 2>/dev/null | head -10
+            echo '--smoke-tail--'
+            tail -12 smoke-output.txt 2>/dev/null
+            echo '--backendlog-tail--'
+            tail -25 backend.log 2>/dev/null
+          } > diag.txt
+          echo "::error title=smoke-diagnostics::$(tr '\n\r' '||' < diag.txt | head -c 3000)"
 
       - name: Upload smoke diagnostics
         if: failure()
@@ -102,4 +116,6 @@ jobs:
           name: smoke-diagnostics
           path: |
             backend.log
+            smoke-output.txt
+            diag.txt
             javaEEProject4/logs/
