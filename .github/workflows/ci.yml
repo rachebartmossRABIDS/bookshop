@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: bookshop
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: vue/package-lock.json
+
+      - name: Initialize database
+        run: mysql -h 127.0.0.1 -uroot -proot bookshop < bookshop.sql
+
+      - name: Prepare runtime config from examples
+        working-directory: javaEEProject4/src/main/resources
+        run: |
+          for f in *.properties.example; do cp "$f" "${f%.example}"; done
+
+      - name: Backend unit tests and package
+        working-directory: javaEEProject4
+        run: mvn -B test package
+
+      - name: Start backend
+        working-directory: javaEEProject4
+        env:
+          JDBC_USERNAME: root
+          JDBC_PASSWORD: root
+          REDIS_ENABLED: "false"
+        run: |
+          nohup mvn -B tomcat7:run > ../backend.log 2>&1 &
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8090/project1/kind/list >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat backend.log
+          exit 1
+
+      - name: Frontend dependencies and build
+        working-directory: vue
+        run: npm ci && npm run build
+
+      - name: HTTP smoke tests
+        run: node smoke-test.mjs
+
+      - name: Upload smoke diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-diagnostics
+          path: |
+            backend.log
+            javaEEProject4/logs/
