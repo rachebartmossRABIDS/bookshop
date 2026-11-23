@@ -37,4 +37,23 @@ public class CommentController {
         int result=commentService.remove(cid);
         return result>0?Result.success():Result.fail("删除评论失败");
     }
+    @GetMapping("/listAll")
+    public Result listAll(Integer pageNo, Integer pageSize) {
+        PageInfo<Comment> pageInfo = commentService.listAll(pageNo, pageSize);
+        return Result.success(pageInfo);
+    }
+    @PostMapping("/like")
+    public Result like(Integer cid) {
+        commentService.like(cid);
+        return Result.success("点赞成功", null);
+    }
+    @PostMapping("/unlike")
+    public Result unlike(Integer cid) {
+        commentService.unlike(cid);
+        return Result.success("已取消点赞", null);
+    }
+    @PostMapping("/reply")
+    public Result reply(Integer cid, String reply) {
+        return Result.success("回复成功", commentService.reply(cid, reply));
+    }
 }

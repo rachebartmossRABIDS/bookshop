@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.One;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 /**
@@ -29,17 +30,39 @@ public interface CommentMapper {
 
     @Select("select * from comment where uid=#{uid}")
     @Results({
-            @Result(column = "bid",property = "book",
+            @Result(column = "uid", property = "uid"),
+            @Result(column = "bid", property = "bid"),
+            @Result(column = "bid", property = "book",
                     one = @One(select = "cn.edu.hbpu.mapper.BookMapper.getByBidPrimary"))
     })
     List<Comment> selectByUid(Integer uid);
 
     @Select("select * from comment where bid=#{bid} order by cid desc ")
     @Results({
-            @Result(column = "uid",property = "user",
-                    one = @One(select = "cn.edu.hbpu.mapper.UserMapper.selectByPrimaryKey"))
+            @Result(column = "uid", property = "uid"),
+            @Result(column = "bid", property = "bid"),
+            @Result(column = "uid", property = "user",
+                    one = @One(select = "cn.edu.hbpu.mapper.UserMapper.selectPublicByPrimaryKey"))
     })
     List<Comment> selectByBid(Integer bid);
 
+    /**
+     * 管理端全量评论（嵌套图书与评论人公开信息）
+     */
+    @Select("select * from comment order by cid desc")
+    @Results({
+            @Result(column = "uid", property = "uid"),
+            @Result(column = "bid", property = "bid"),
+            @Result(column = "bid", property = "book",
+                    one = @One(select = "cn.edu.hbpu.mapper.BookMapper.getByBidPrimary")),
+            @Result(column = "uid", property = "user",
+                    one = @One(select = "cn.edu.hbpu.mapper.UserMapper.selectPublicByPrimaryKey"))
+    })
+    List<Comment> selectAll();
+
     List<Comment> selectByContent(String content);
+
+    @Update("update comment set reply=#{reply},reply_time=now() where cid=#{cid}")
+    int updateReply(@org.apache.ibatis.annotations.Param("cid") Integer cid,
+                    @org.apache.ibatis.annotations.Param("reply") String reply);
 }

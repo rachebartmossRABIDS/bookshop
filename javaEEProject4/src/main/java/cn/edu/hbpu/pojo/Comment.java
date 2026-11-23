@@ -43,6 +43,20 @@ public class Comment implements Serializable {
      */
     private Integer oid;
 
+    /**
+     * 评分，1-5。
+     */
+    private Integer score;
+
+    private String reply;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date replyTime;
+
+    private Integer likeCount;
+
+    private Boolean liked;
+
     private User user;
 
     private Book book;

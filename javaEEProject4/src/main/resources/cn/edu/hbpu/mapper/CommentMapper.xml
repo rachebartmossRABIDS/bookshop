@@ -11,11 +11,14 @@
             <result property="time" column="time" jdbcType="TIMESTAMP"/>
             <result property="content" column="content" jdbcType="VARCHAR"/>
             <result property="oid" column="oid" jdbcType="INTEGER"/>
+            <result property="score" column="score" jdbcType="INTEGER"/>
+            <result property="reply" column="reply" jdbcType="VARCHAR"/>
+            <result property="replyTime" column="reply_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         cid,uid,bid,
-        time,content,oid
+        time,content,oid,score,reply,reply_time
     </sql>
 
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -36,10 +39,11 @@
     <insert id="insert" keyColumn="cid" keyProperty="cid" parameterType="cn.edu.hbpu.pojo.Comment" useGeneratedKeys="true">
         insert into comment
         ( cid,uid,bid
-        ,time,content,oid
+        ,time,content,oid,score,reply,reply_time
         )
         values (#{cid,jdbcType=INTEGER},#{uid,jdbcType=INTEGER},#{bid,jdbcType=INTEGER}
         ,#{time,jdbcType=TIMESTAMP},#{content,jdbcType=VARCHAR},#{oid,jdbcType=INTEGER}
+        ,#{score,jdbcType=INTEGER},#{reply,jdbcType=VARCHAR},#{replyTime,jdbcType=TIMESTAMP}
         )
     </insert>
     <insert id="insertSelective" keyColumn="cid" keyProperty="cid" parameterType="cn.edu.hbpu.pojo.Comment" useGeneratedKeys="true">
@@ -51,6 +55,9 @@
                 <if test="time != null">time,</if>
                 <if test="content != null">content,</if>
                 <if test="oid != null">oid,</if>
+                <if test="score != null">score,</if>
+                <if test="reply != null">reply,</if>
+                <if test="replyTime != null">reply_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
                 <if test="cid != null">#{cid,jdbcType=INTEGER},</if>
@@ -59,6 +66,9 @@
                 <if test="time != null">#{time,jdbcType=TIMESTAMP},</if>
                 <if test="content != null">#{content,jdbcType=VARCHAR},</if>
                 <if test="oid != null">#{oid,jdbcType=INTEGER},</if>
+                <if test="score != null">#{score,jdbcType=INTEGER},</if>
+                <if test="reply != null">#{reply,jdbcType=VARCHAR},</if>
+                <if test="replyTime != null">#{replyTime,jdbcType=TIMESTAMP},</if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="cn.edu.hbpu.pojo.Comment">
@@ -79,6 +89,15 @@
                 <if test="oid != null">
                     oid = #{oid,jdbcType=INTEGER},
                 </if>
+                <if test="score != null">
+                    score = #{score,jdbcType=INTEGER},
+                </if>
+                <if test="reply != null">
+                    reply = #{reply,jdbcType=VARCHAR},
+                </if>
+                <if test="replyTime != null">
+                    reply_time = #{replyTime,jdbcType=TIMESTAMP},
+                </if>
         </set>
         where   cid = #{cid,jdbcType=INTEGER} 
     </update>
@@ -89,7 +108,10 @@
             bid =  #{bid,jdbcType=INTEGER},
             time =  #{time,jdbcType=TIMESTAMP},
             content =  #{content,jdbcType=VARCHAR},
-            oid =  #{oid,jdbcType=INTEGER}
+            oid =  #{oid,jdbcType=INTEGER},
+            score =  #{score,jdbcType=INTEGER},
+            reply =  #{reply,jdbcType=VARCHAR},
+            reply_time =  #{replyTime,jdbcType=TIMESTAMP}
         where   cid = #{cid,jdbcType=INTEGER} 
     </update>
 </mapper>
