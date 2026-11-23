@@ -37,7 +37,11 @@ jobs:
           cache-dependency-path: vue/package-lock.json
 
       - name: Initialize database
-        run: mysql -h 127.0.0.1 -uroot -proot bookshop < bookshop.sql
+        run: |
+          # JDBC URL 声明 serverTimezone=Asia/Shanghai；容器默认 UTC，
+          # 需对齐否则 now() 写入的时间会被驱动平移 8 小时（验证码过期/限流判断失效）
+          mysql -h 127.0.0.1 -uroot -proot -e "SET GLOBAL time_zone = '+08:00';"
+          mysql -h 127.0.0.1 -uroot -proot bookshop < bookshop.sql
 
       - name: Prepare runtime config from examples
         working-directory: javaEEProject4/src/main/resources
