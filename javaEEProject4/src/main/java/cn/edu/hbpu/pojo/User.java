@@ -57,6 +57,12 @@ public class User implements Serializable {
      */
     private Integer state;
 
+    /**
+     * JWT 令牌版本：改密、封禁时递增，使旧 token 立即失效。
+     */
+    @JsonIgnore
+    private Integer tokenVersion;
+
     private static final long serialVersionUID = 1L;
 
     @Override
