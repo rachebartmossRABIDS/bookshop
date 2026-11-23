@@ -28,6 +28,9 @@ javaEEProject4/src/main/resources/cors.properties
 # Navicat
 *.ncx
 
+# Local tooling
+.qoderignore
+
 # OS
 Thumbs.db
 .DS_Store
