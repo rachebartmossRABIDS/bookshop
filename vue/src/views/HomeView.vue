@@ -1,6 +1,7 @@
 <script setup>
 import { ref} from 'vue'
 const books = ref([])
+const loaded = ref(false)
 import {useRouter} from 'vue-router'
 const router = useRouter();
 import { bookListService } from '../apis/book'
@@ -9,8 +10,10 @@ const bookList=async()=>{
     if(!kid.value){
         return
     }
+    loaded.value=false
     let result=await bookListService(kid.value);
-    books.value=result.data;
+    books.value=result.data || [];
+    loaded.value=true
 }
 import { kindListService } from '../apis/kind'
 const kinds=ref([])
@@ -66,6 +69,7 @@ const goSearch=()=>{
                 </van-col>
             </van-row>
         </div>
+        <van-empty v-if="loaded && books.length===0" description="该分类下暂无图书" />
     <van-back-top right="5vw" bottom="5vh"/>
     </div>
     <router-view/>

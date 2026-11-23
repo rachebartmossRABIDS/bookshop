@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { showNotify } from 'vant';
 import { useRoute,useRouter } from 'vue-router';
-const content=useRoute().params.content
+const route=useRoute()
+const content=ref(route.params.content || '')
 const router=useRouter();
 const onClickButton = () =>{
     goSearch()
@@ -18,16 +19,34 @@ const pageNo=ref(1);
 const pageSize=ref(8);
 const pages=ref(0)
 import {searchService} from '../apis/book'
+const loaded=ref(false)
+const sort=ref('')
+const sortOptions=[
+    {text:'默认排序',value:''},
+    {text:'价格从低到高',value:'price_asc'},
+    {text:'价格从高到低',value:'price_desc'},
+    {text:'销量优先',value:'volume_desc'}
+]
 const bookList=async()=>{
     let result=await searchService({
-    name:content,
+    name:content.value,
     pageNo:pageNo.value,
-    pageSize:pageSize.value
+    pageSize:pageSize.value,
+    sort:sort.value
 })
-    books.value.push(...result.data.list)
+    books.value.push(...(result.data.list || []))
     pages.value=result.data.pages
+    loaded.value=true
 }
 bookList()
+const onSortChange=()=>{
+    books.value=[]
+    pageNo.value=1
+    pages.value=0
+    tip.value='加载更多'
+    loaded.value=false
+    bookList()
+}
 const tip=ref('加载更多')
 const getMore=()=>{
     pageNo.value++;
@@ -64,7 +83,10 @@ const picIp=usePicStore().picIp
             </template>
             </van-search>
             </van-col>
-            </van-row>  
+            </van-row>
+            <van-dropdown-menu>
+                <van-dropdown-item v-model="sort" :options="sortOptions" @change="onSortChange" />
+            </van-dropdown-menu>
         </van-sticky>    
       <div>
         <div class="list"> 
@@ -77,7 +99,8 @@ const picIp=usePicStore().picIp
                 <van-col span="8" class="img"><img :src="picIp+item.image"></van-col>
             </van-row>
         </div>
-        <div class="load" @click="getMore">
+        <van-empty v-if="loaded && books.length===0" description="没有找到相关图书" />
+        <div class="load" v-if="books.length>0" @click="getMore">
             {{ tip }}
         </div>
         <van-back-top right="5vw" bottom="5vh"/>

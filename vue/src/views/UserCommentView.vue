@@ -16,6 +16,7 @@ import { usePicStore } from '../store/picStore'
 const picIp=usePicStore().picIp
 import { userCommentListService,delCommentService } from '../apis/comment';
 const comments=ref([])
+const loaded=ref(false)
 const pageNo=ref(1);
 const pageSize=ref(8);
 const pages=ref(0)
@@ -30,6 +31,7 @@ const commentList=async()=>{
     })
     comments.value.push(...(result.data.list || []))
     pages.value=result.data.pages
+    loaded.value=true
 }
 commentList()
 const goDetail=(item)=>{
@@ -79,7 +81,7 @@ const getMore=()=>{
                 <van-swipe-cell>
             <van-row @click="goDetail(item)" >
                 <van-col span="16" class="flex-column">
-                    <div>{{ item.book.name }}</div>
+                    <div>{{ item.book ? item.book.name : '图书已删除' }}</div>
                     <div class="content">{{ item.content }}</div>
                     <div class="time">{{ item.time }}</div>
                 </van-col>
@@ -90,7 +92,8 @@ const getMore=()=>{
   </template>
             </van-swipe-cell>
             </div>
-            <div class="load" @click="getMore">
+            <van-empty v-if="loaded && comments.length===0" description="还没有发表过评论" />
+            <div class="load" v-if="comments.length>0" @click="getMore">
             {{tip}}
         </div>
         <van-back-top right="5vw" bottom="5vh"/>

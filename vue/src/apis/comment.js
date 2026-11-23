@@ -19,3 +19,20 @@ export function delCommentService(data){
     }
     return instance.post('/comment/remove',params);
 }
+export function allCommentListService(params){
+    return instance.get('/comment/listAll',{params});
+}
+const post = (url, data) => {
+    const params = new URLSearchParams()
+    for (const key in data) params.append(key, data[key])
+    return instance.post(url, params)
+}
+export function likeCommentService(data){
+    return post('/comment/like', data)
+}
+export function unlikeCommentService(data){
+    return post('/comment/unlike', data)
+}
+export function replyCommentService(data){
+    return post('/comment/reply', data)
+}

@@ -5,8 +5,9 @@ const user=ref({
     password:''
 })
 import { showNotify } from 'vant';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 const router=useRouter();
+const route=useRoute();
 const goBack=()=>{
     router.go(-1)
 }
@@ -19,9 +20,10 @@ const login=async()=>{
         return
     }
     let result=await userLoginService(user.value)
-    userStore.setInfo(result.data)
+    userStore.setToken(result.data.token)
+    userStore.setInfo(result.data.user)
     showNotify({type: 'success', message:'登录成功'});
-    router.push('/mine')
+    router.push(route.query.redirect || '/mine')
 }
 </script>
 
@@ -36,6 +38,11 @@ const login=async()=>{
           <van-field label="用户名" placeholder="请输入用户名" v-model.trim="user.username" />
           <van-field label="密码" type="password" placeholder="请输入密码" v-model.trim="user.password"/>
         </van-cell-group>
+        <div class="regist-link">
+          <router-link to="/forgot-password">忘记密码</router-link>
+          <span class="split">|</span>
+          <router-link to="/register">没有账号？去注册</router-link>
+        </div>
         <van-button block type="warning" native-type="submit">提交</van-button>
       </van-form>
     </div>
@@ -44,6 +51,10 @@ const login=async()=>{
   <style scoped>
   .regist-link{
   text-align: right;
-  margin-top: 10px;
+  margin: 10px 16px;
+}
+.split{
+  margin: 0 8px;
+  color: #bbb;
 }
   </style>

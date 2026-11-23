@@ -16,35 +16,75 @@ const goBack=()=>{
 import { ref } from 'vue';
 import { usePicStore } from '../store/picStore'
 const picIp=usePicStore().picIp
-import { bookCommentListService,addCommentService} from '../apis/comment';
+import { bookCommentListService,addCommentService,likeCommentService,unlikeCommentService} from '../apis/comment';
+import { addressListService } from '../apis/address';
 const comments=ref([])
 const commentList=async()=>{
     let result=await bookCommentListService({bid})
     comments.value=result.data
 }
 commentList();
-import { bookOrderListService,addOrderService} from '../apis/order';
-const orders=ref([])
-const orderList=async()=>{
-    let result=await bookOrderListService({bid})
-    orders.value=result.data
-}
-orderList();
+import { addOrderService} from '../apis/order';
+import { cartAddService } from '../apis/cart';
 const content=ref('')
+const score=ref(5)
 import {useUserStore} from '../store/userStore'
 import { showNotify } from 'vant';
 const userStore=useUserStore();
-const showOrder=ref(false)
-const num=ref(1)
-const receiver=ref('')
-const tel=ref('')
-const addr=ref('')
-const openOrder=()=>{
+import { favoriteCheckService, favoriteSaveService, favoriteRemoveService } from '../apis/favorite';
+const isFav=ref(false)
+const checkFavorite=async()=>{
+    if(!userStore.info.uid){
+        return
+    }
+    const result=await favoriteCheckService({bid})
+    isFav.value=!!result.data
+}
+checkFavorite()
+const toggleFavorite=async()=>{
     if(!userStore.info.uid){
         showNotify({type:'danger', message:'请先登录'})
         router.push('/login')
         return
     }
+    if(isFav.value){
+        await favoriteRemoveService({bid})
+        isFav.value=false
+        showNotify({type:'success', message:'已取消收藏'})
+    }else{
+        await favoriteSaveService({bid})
+        isFav.value=true
+        showNotify({type:'success', message:'收藏成功'})
+    }
+}
+const showOrder=ref(false)
+const num=ref(1)
+const receiver=ref('')
+const tel=ref('')
+const addr=ref('')
+const addresses=ref([])
+const requestId=ref('')
+const newRequestId=()=>globalThis.crypto?.randomUUID?.() || (Date.now()+'-'+Math.random().toString(16).slice(2))
+const applyAddress=(item)=>{
+    receiver.value=item.name
+    tel.value=item.tel
+    addr.value=item.addr
+}
+const openOrder=async()=>{
+    if(!userStore.info.uid){
+        showNotify({type:'danger', message:'请先登录'})
+        router.push('/login')
+        return
+    }
+    if(Number(book.value.inventory)<=0){
+        showNotify({type:'danger', message:'该图书库存不足，暂时无法购买'})
+        return
+    }
+    requestId.value=newRequestId()
+    const result=await addressListService()
+    addresses.value=result.data || []
+    const selected=addresses.value.find(item=>item.isDefault===1) || addresses.value[0]
+    if(selected) applyAddress(selected)
     showOrder.value=true
 }
 const sendOrder=async()=>{
@@ -52,18 +92,27 @@ const sendOrder=async()=>{
         showNotify({type:'danger', message:'请填写收件人、电话和地址'})
         return
     }
+    const count=Number(num.value)||1
+    if(count<1){
+        showNotify({type:'danger', message:'购买数量至少为 1'})
+        return
+    }
+    if(count>Number(book.value.inventory)){
+        showNotify({type:'danger', message:'购买数量超出剩余库存'})
+        return
+    }
     await addOrderService({
         bid:bid,
-        uid:userStore.info.uid,
-        num:num.value || 1,
+        num:count,
         name:receiver.value,
         tel:tel.value,
         addr:addr.value,
-        state:'1'
+        requestId:requestId.value
     })
-    showNotify({type:'success', message:'下单成功'})
+    showNotify({type:'success', message:'下单成功，请完成付款'})
     showOrder.value=false
-    orderList()
+    bookDetail()
+    router.push('/order')
 }
 const sendComment=async()=>{
     if(!userStore.info.uid){
@@ -77,15 +126,47 @@ const sendComment=async()=>{
     }
     await addCommentService({
         bid:bid,
-        uid:userStore.info.uid,
-        content:content.value
+        content:content.value,
+        score:score.value
     })
     content.value=''
     showNotify({type:'success', message:'评论成功'})
     commentList()
 }
+const toggleLike=async(item)=>{
+    if(!userStore.info.uid){
+        showNotify({type:'danger', message:'请先登录'})
+        router.push('/login')
+        return
+    }
+    if(item.liked){
+        await unlikeCommentService({cid:item.cid})
+        item.liked=false
+        item.likeCount=Math.max(0,Number(item.likeCount||0)-1)
+    }else{
+        await likeCommentService({cid:item.cid})
+        item.liked=true
+        item.likeCount=Number(item.likeCount||0)+1
+    }
+}
 const goSDetail=(book)=>{
     router.push('/sdetail/'+book.sid);
+}
+const addToCart=async()=>{
+    if(!userStore.info.uid){
+        showNotify({type:'danger', message:'请先登录'})
+        router.push('/login')
+        return
+    }
+    if(Number(book.value.inventory)<=0){
+        showNotify({type:'danger', message:'该图书库存不足，暂时无法购买'})
+        return
+    }
+    await cartAddService({bid, num:1})
+    showNotify({type:'success', message:'已加入购物车'})
+}
+const goCart=()=>{
+    router.push('/cart')
 }
 const activeNames = ref(['1']);
 const user=ref({});
@@ -102,13 +183,30 @@ const user=ref({});
         />
         <van-space direction="vertical" fill>
         <img :src="picIp+book.image">   
-        <div class="price">书籍价格：￥{{ book.price }}</div>
+        <div class="price-row">
+            <div class="price">书籍价格：￥{{ book.price }}</div>
+            <van-button size="small" :icon="isFav?'star':'star-o'" :type="isFav?'warning':'default'" @click="toggleFavorite">{{ isFav?'已收藏':'收藏' }}</van-button>
+        </div>
         <div>书籍名称：{{book.name}}</div>
         <div>作者：{{book.author}}</div>
         <div :key="book.id " @click="goSDetail(book)" style="color: blue;">店铺信息<van-icon name="arrow" /></div>
-        <van-submit-bar button-text="购买书籍" @submit="openOrder" />
+        <div class="stock">剩余库存：{{ book.inventory }}</div>
+        <van-action-bar>
+            <van-action-bar-icon icon="cart-o" text="购物车" @click="goCart" />
+            <van-action-bar-button type="warning" text="加入购物车" @click="addToCart" />
+            <van-action-bar-button type="danger" text="立即购买" @click="openOrder" />
+        </van-action-bar>
         <van-popup v-model:show="showOrder" position="bottom" round>
             <van-form @submit="sendOrder">
+                <div v-if="addresses.length" class="address-picker">
+                    <div class="picker-title">选择收货地址</div>
+                    <div v-for="item in addresses" :key="item.aid" class="address-option"
+                        @click="applyAddress(item)">
+                        <strong>{{ item.name }}</strong>
+                        <span>{{ item.tel }}</span>
+                        <div>{{ item.addr }}</div>
+                    </div>
+                </div>
                 <van-field v-model.number="num" type="digit" label="数量" />
                 <van-field v-model="receiver" label="收件人" placeholder="请输入收件人" />
                 <van-field v-model="tel" label="电话" placeholder="请输入电话" />
@@ -140,19 +238,34 @@ const user=ref({});
                         round
                         width="2rem"
                         height="2rem"
-                        :src="picIp+(item.user ? item.user.image : 'default.png')"
+                        :src="picIp+(item.user && item.user.image ? item.user.image : 'default.png')"
                         />
                     </van-col>
                     <van-col span="21" >
                         <div class="name">{{ item.user ? item.user.username : '' }}</div>
+                        <div class="comment-meta">
+                            <van-rate :model-value="Number(item.score)||5" readonly size="12" />
+                            <van-tag v-if="item.oid" type="success">已购</van-tag>
+                        </div>
                     <div>
                         {{ item.content }}
                     </div>
+                    <div v-if="item.reply" class="reply">
+                        <strong>商家回复：</strong>{{ item.reply }}
+                    </div>
+                    <van-button size="mini" plain :icon="item.liked ? 'good-job' : 'good-job-o'"
+                        @click.stop="toggleLike(item)">
+                        有用 {{ item.likeCount || 0 }}
+                    </van-button>
                     <div class="time">
                         {{ item.time }}
                     </div>
                     </van-col>
             </van-row>
+        </div>
+        <div class="rating-row">
+            <span>评分</span>
+            <van-rate v-model="score" />
         </div>
         <van-field v-model="content" rows="2" autosize type="textarea" placeholder="写下你的评价" />
         <div style="margin: 16px;">
@@ -174,6 +287,17 @@ const user=ref({});
     line-height: 25px;
     font-weight: 400;
 }
+.price-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 10px;
+}
+.stock{
+    margin: 0 10px;
+    color: #666;
+    font-size: 14px;
+}
 .title{
     font-size: 20px;
     font-weight: bold;
@@ -189,5 +313,44 @@ img{
     font-size: 15px;
     font-weight: bold;
     margin: 5px 0;
+}
+.comment-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:4px 0;
+}
+.reply{
+    margin:8px 0;
+    padding:8px;
+    border-radius:6px;
+    background:#f7f8fa;
+    color:#555;
+}
+.rating-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 16px;
+}
+.address-picker{
+    max-height:180px;
+    overflow:auto;
+    padding:8px 16px;
+}
+.picker-title{
+    font-weight:bold;
+    margin-bottom:6px;
+}
+.address-option{
+    border:1px solid #eee;
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:6px;
+    font-size:13px;
+}
+.address-option span{
+    margin-left:8px;
+    color:#777;
 }
 </style>

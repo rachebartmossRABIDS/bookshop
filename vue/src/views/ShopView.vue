@@ -1,6 +1,7 @@
 <script setup>
 import { ref} from 'vue'
 const shops = ref([])
+const loaded = ref(false)
 import {useRouter} from 'vue-router'
 const router = useRouter()
 import { shopListService } from '../apis/shop'
@@ -9,8 +10,10 @@ const shopList=async()=>{
     if(!kid.value){
         return
     }
+    loaded.value=false
     let result=await shopListService(kid.value);
-    shops.value=result.data;
+    shops.value=result.data || [];
+    loaded.value=true
 }
 import { kindListService } from '../apis/kind'
 const kinds=ref([])
@@ -51,6 +54,7 @@ const goSDetail=(item)=>{
          </van-col>
 </van-row>
 </div>
+<van-empty v-if="loaded && shops.length===0" description="该分类下暂无店铺" />
 <van-back-top right="5vw" bottom="5vh"/>
     </div>
     <router-view/>

@@ -15,12 +15,14 @@ const goBack=()=>{
 }
 import { ref } from 'vue';
 const books = ref([])
+const loaded = ref(false)
 import { usePicStore } from '../store/picStore'
 const picIp=usePicStore().picIp
 import { bookListBySidService } from '../apis/book'
 const bookList=async()=>{
     let result=await bookListBySidService({sid});
     books.value=result.data || [];
+    loaded.value=true
 }
 bookList();
 const goDetail=(item)=>{
@@ -51,6 +53,7 @@ const goDetail=(item)=>{
            <van-col span="8" class="img"><img :src="picIp+item.image" ></van-col> 
             </van-row>
     </div>
+    <van-empty v-if="loaded && books.length===0" description="该店铺暂无在售图书" />
     <van-back-top right="5vw" bottom="5vh"/>
         </div>
 </template>

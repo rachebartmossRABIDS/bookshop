@@ -12,7 +12,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/pic': {
-        target: 'http://localhost:8090',
+        target: 'http://localhost:8090/project1',
         changeOrigin: true
       }
     }
