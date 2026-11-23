@@ -71,7 +71,29 @@ jobs:
         run: npm ci && npm run build
 
       - name: HTTP smoke tests
-        run: node smoke-test.mjs
+        run: |
+          set -o pipefail
+          node smoke-test.mjs 2>&1 | tee smoke-output.txt
+
+      - name: Publish diagnostics to job summary
+        if: failure()
+        run: |
+          {
+            echo '## Backend health recheck'
+            echo '```'
+            curl -sS -m 5 http://localhost:8090/project1/kind/list || echo 'BACKEND UNREACHABLE'
+            echo
+            mysql -h 127.0.0.1 -uroot -proot -e 'select count(*) books from bookshop.book' || echo 'MYSQL UNREACHABLE'
+            echo '```'
+            echo '## smoke-output.txt (tail 80)'
+            echo '```'
+            tail -80 smoke-output.txt 2>/dev/null || echo '(missing)'
+            echo '```'
+            echo '## backend.log (tail 80)'
+            echo '```'
+            tail -80 backend.log 2>/dev/null || echo '(missing)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload smoke diagnostics
         if: failure()
