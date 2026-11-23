@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-bookshop-local-password}
+      MYSQL_DATABASE: bookshop
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - bookshop_mysql:/var/lib/mysql
+      - ./bookshop.sql:/docker-entrypoint-initdb.d/01-bookshop.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-bookshop-local-password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - bookshop_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: javaEEProject4/Dockerfile
+    environment:
+      JDBC_URL: jdbc:mysql://mysql:3306/bookshop?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      JDBC_USERNAME: root
+      JDBC_PASSWORD: ${MYSQL_ROOT_PASSWORD:-bookshop-local-password}
+      JWT_SECRET: ${JWT_SECRET:-replace-this-with-a-random-secret-at-least-32-bytes}
+      PIC_DIR: /app/picture
+      REDIS_HOST: redis
+      REDIS_ENABLED: "true"
+      MAIL_ENABLED: "false"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+    volumes:
+      - ./picture:/app/picture
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./vue
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  bookshop_mysql:
+  bookshop_redis:
