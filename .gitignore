@@ -9,12 +9,21 @@ javaEEProject4/target/
 *.code-workspace
 
 # Node / Vue
+node_modules/
 vue/node_modules/
 vue/dist/
 
 # Logs
 *.log
 logs/
+
+# Real local configuration (commit *.properties.example instead)
+javaEEProject4/src/main/resources/jdbc.properties
+javaEEProject4/src/main/resources/jwt.properties
+javaEEProject4/src/main/resources/pic.properties
+javaEEProject4/src/main/resources/mail.properties
+javaEEProject4/src/main/resources/redis.properties
+javaEEProject4/src/main/resources/cors.properties
 
 # Navicat
 *.ncx

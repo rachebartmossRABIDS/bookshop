@@ -1,0 +1,2 @@
+jwt.secret=${JWT_SECRET:replace-with-at-least-32-random-bytes}
+jwt.expire-minutes=${JWT_EXPIRE_MINUTES:720}
