@@ -17,6 +17,12 @@ public interface ShopMapper {
 
     @Select("select sid,`name`,logo,score from shop where sid=#{sid}")
     Shop getBySidPrimary(Integer sid);
+
+    /**
+     * 管理端全量店铺列表（含简介等完整字段）
+     */
+    @Select("select * from shop order by sid desc")
+    List<Shop> selectAll();
     int deleteByPrimaryKey(Long id);
 
     int insert(Shop record);

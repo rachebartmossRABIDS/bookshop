@@ -6,6 +6,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * 
@@ -27,6 +28,7 @@ public class Book implements Serializable {
      * 出版时间（XX年XX月）
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date time;
 
     /**
@@ -57,12 +59,12 @@ public class Book implements Serializable {
     /**
      * 库存
      */
-    private String inventory;
+    private Integer inventory;
 
     /**
      * 销量
      */
-    private String volume;
+    private Integer volume;
 
     /**
      * 价格

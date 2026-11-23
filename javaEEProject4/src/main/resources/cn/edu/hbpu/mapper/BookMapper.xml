@@ -13,8 +13,8 @@
             <result property="isbn" column="isbn" jdbcType="VARCHAR"/>
             <result property="image" column="image" jdbcType="VARCHAR"/>
             <result property="backlist" column="backlist" jdbcType="VARCHAR"/>
-            <result property="inventory" column="inventory" jdbcType="VARCHAR"/>
-            <result property="volume" column="volume" jdbcType="VARCHAR"/>
+            <result property="inventory" column="inventory" jdbcType="INTEGER"/>
+            <result property="volume" column="volume" jdbcType="INTEGER"/>
             <result property="price" column="price" jdbcType="DECIMAL"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="sid" column="sid" jdbcType="INTEGER"/>
@@ -53,8 +53,8 @@
         ,content)
         values (#{bid,jdbcType=INTEGER},#{name,jdbcType=VARCHAR},#{time,jdbcType=TIMESTAMP}
         ,#{press,jdbcType=VARCHAR},#{author,jdbcType=VARCHAR},#{isbn,jdbcType=VARCHAR}
-        ,#{image,jdbcType=VARCHAR},#{backlist,jdbcType=VARCHAR},#{inventory,jdbcType=VARCHAR}
-        ,#{volume,jdbcType=VARCHAR},#{price,jdbcType=DECIMAL},#{description,jdbcType=VARCHAR}
+        ,#{image,jdbcType=VARCHAR},#{backlist,jdbcType=VARCHAR},#{inventory,jdbcType=INTEGER}
+        ,#{volume,jdbcType=INTEGER},#{price,jdbcType=DECIMAL},#{description,jdbcType=VARCHAR}
         ,#{sid,jdbcType=INTEGER},#{state,jdbcType=INTEGER},#{kid,jdbcType=INTEGER}
         ,#{content,jdbcType=VARCHAR})
     </insert>
@@ -87,8 +87,8 @@
                 <if test="isbn != null">#{isbn,jdbcType=VARCHAR},</if>
                 <if test="image != null">#{image,jdbcType=VARCHAR},</if>
                 <if test="backlist != null">#{backlist,jdbcType=VARCHAR},</if>
-                <if test="inventory != null">#{inventory,jdbcType=VARCHAR},</if>
-                <if test="volume != null">#{volume,jdbcType=VARCHAR},</if>
+                <if test="inventory != null">#{inventory,jdbcType=INTEGER},</if>
+                <if test="volume != null">#{volume,jdbcType=INTEGER},</if>
                 <if test="price != null">#{price,jdbcType=DECIMAL},</if>
                 <if test="description != null">#{description,jdbcType=VARCHAR},</if>
                 <if test="sid != null">#{sid,jdbcType=INTEGER},</if>
@@ -122,10 +122,10 @@
                     backlist = #{backlist,jdbcType=VARCHAR},
                 </if>
                 <if test="inventory != null">
-                    inventory = #{inventory,jdbcType=VARCHAR},
+                    inventory = #{inventory,jdbcType=INTEGER},
                 </if>
                 <if test="volume != null">
-                    volume = #{volume,jdbcType=VARCHAR},
+                    volume = #{volume,jdbcType=INTEGER},
                 </if>
                 <if test="price != null">
                     price = #{price,jdbcType=DECIMAL},
@@ -158,8 +158,8 @@
             isbn =  #{isbn,jdbcType=VARCHAR},
             image =  #{image,jdbcType=VARCHAR},
             backlist =  #{backlist,jdbcType=VARCHAR},
-            inventory =  #{inventory,jdbcType=VARCHAR},
-            volume =  #{volume,jdbcType=VARCHAR},
+            inventory =  #{inventory,jdbcType=INTEGER},
+            volume =  #{volume,jdbcType=INTEGER},
             price =  #{price,jdbcType=DECIMAL},
             description =  #{description,jdbcType=VARCHAR},
             sid =  #{sid,jdbcType=INTEGER},
