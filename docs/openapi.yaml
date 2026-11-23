@@ -1,0 +1,660 @@
+openapi: 3.0.3
+info:
+  title: Bookshop API
+  version: 1.0.0
+  description: |
+    Bookshop 单体 REST API。除标注公开的浏览接口外，均需
+    `Authorization: Bearer <token>`。业务失败仍返回 HTTP 200，响应体 `code=0`；
+    鉴权失败返回 HTTP 401，限流返回 HTTP 429。
+servers:
+  - url: http://localhost:8090/project1
+    description: 本地开发
+  - url: http://localhost:8080/api
+    description: Docker + Nginx
+tags:
+  - name: User
+  - name: Book
+  - name: Kind
+  - name: Shop
+  - name: Comment
+  - name: Order
+  - name: Favorite
+  - name: Cart
+  - name: Address
+  - name: Notification
+  - name: Admin
+  - name: Pic
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Result:
+      type: object
+      required: [code, msg, data]
+      properties:
+        code:
+          type: integer
+          enum: [0, 1]
+          description: 1 成功，0 业务失败
+        msg:
+          type: string
+        data:
+          nullable: true
+    Page:
+      type: object
+      properties:
+        total: { type: integer }
+        pageNum: { type: integer }
+        pageSize: { type: integer }
+        pages: { type: integer }
+        list:
+          type: array
+          items: {}
+    User:
+      type: object
+      properties:
+        uid: { type: integer }
+        username: { type: string }
+        tel: { type: string }
+        email: { type: string }
+        type: { type: integer, description: 1 普通用户，2 管理员 }
+        image: { type: string }
+        reputation: { type: string }
+        state: { type: integer, description: 0 正常，1 封禁 }
+    Book:
+      type: object
+      properties:
+        bid: { type: integer }
+        name: { type: string }
+        author: { type: string }
+        press: { type: string }
+        isbn: { type: string }
+        image: { type: string }
+        inventory: { type: integer }
+        volume: { type: integer }
+        price: { type: number }
+        sid: { type: integer }
+        kid: { type: integer }
+        state: { type: integer, description: 0 上架，1 下架 }
+    Order:
+      type: object
+      properties:
+        oid: { type: integer }
+        uid: { type: integer }
+        bid: { type: integer }
+        num: { type: integer }
+        amount: { type: number }
+        addr: { type: string }
+        name: { type: string }
+        tel: { type: string }
+        state:
+          type: string
+          enum: ["0", "1", "2", "3", "4", "5", "6"]
+          description: 待付款/已付款/已发货/已收货/交易成功/已取消/已退款
+        time: { type: string, format: date-time }
+        shipTime: { type: string, format: date-time, nullable: true }
+        logisticsCompany: { type: string, nullable: true }
+        logisticsNo: { type: string, nullable: true }
+        book: { $ref: "#/components/schemas/Book" }
+        user: { $ref: "#/components/schemas/User" }
+    Address:
+      type: object
+      properties:
+        aid: { type: integer }
+        uid: { type: integer }
+        name: { type: string }
+        tel: { type: string }
+        addr: { type: string }
+        isDefault: { type: integer, enum: [0, 1] }
+    Notification:
+      type: object
+      properties:
+        nid: { type: integer }
+        uid: { type: integer }
+        title: { type: string }
+        content: { type: string }
+        isRead: { type: integer, enum: [0, 1] }
+        time: { type: string, format: date-time }
+security:
+  - bearerAuth: []
+paths:
+  /user/login:
+    post:
+      tags: [User]
+      summary: 登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200": { description: token and user }
+        "429": { description: rate limited }
+  /user/register:
+    post:
+      tags: [User]
+      summary: 注册
+      security: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                tel: { type: string }
+                email: { type: string }
+      responses:
+        "200": { description: result }
+  /user/sendResetCode:
+    post:
+      tags: [User]
+      summary: 发送找回密码验证码
+      security: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200": { description: result }
+        "429": { description: rate limited }
+  /user/resetPassword:
+    post:
+      tags: [User]
+      summary: 通过邮箱验证码重置密码
+      security: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, code, newPassword]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string }
+                newPassword: { type: string, minLength: 6, maxLength: 64 }
+      responses:
+        "200": { description: result }
+  /user/refresh:
+    post:
+      tags: [User]
+      summary: 使用当前有效 token 换取新 token
+      responses:
+        "200": { description: result }
+  /user/{uid}:
+    get:
+      tags: [User]
+      summary: 查询本人或管理员查询用户
+      parameters:
+        - { name: uid, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /user/updatePassword:
+    post:
+      tags: [User]
+      summary: 修改密码并使旧 token 失效
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                OldPassword: { type: string }
+                NewPassword: { type: string }
+      responses:
+        "200": { description: result }
+  /user/updateInfo:
+    post:
+      tags: [User]
+      summary: 修改手机号/邮箱
+      responses:
+        "200": { description: result }
+  /user/uploadAvatar:
+    post:
+      tags: [User]
+      summary: 上传头像
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200": { description: result }
+  /user/list:
+    get:
+      tags: [User, Admin]
+      summary: 管理员分页查询用户
+      parameters:
+        - { name: pageNo, in: query, schema: { type: integer } }
+        - { name: pageSize, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /user/setState:
+    post:
+      tags: [User, Admin]
+      summary: 管理员封禁/解封用户
+      responses:
+        "200": { description: result }
+  /book/list/{kid}:
+    get:
+      tags: [Book]
+      security: []
+      summary: 分类下图书
+      parameters:
+        - { name: kid, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /book/listBySid:
+    get:
+      tags: [Book]
+      security: []
+      summary: 店铺下图书
+      parameters:
+        - { name: sid, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /book/detail:
+    get:
+      tags: [Book]
+      security: []
+      summary: 图书详情（Redis 缓存 5 分钟）
+      parameters:
+        - { name: bid, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /book/search:
+    post:
+      tags: [Book]
+      security: []
+      summary: 搜索图书并记录搜索词
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: ["", price_asc, price_desc, volume_desc]
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                pageNo: { type: integer }
+                pageSize: { type: integer }
+      responses:
+        "200": { description: result }
+  /book/hotWords:
+    get:
+      tags: [Book]
+      security: []
+      summary: 近 30 天 Top10 搜索热词
+      responses:
+        "200": { description: result }
+  /book/save:
+    post:
+      tags: [Book, Admin]
+      summary: 管理员新增/编辑图书
+      responses:
+        "200": { description: result }
+  /book/remove:
+    post:
+      tags: [Book, Admin]
+      summary: 管理员删除图书
+      responses:
+        "200": { description: result }
+  /book/uploadImage:
+    post:
+      tags: [Book, Admin]
+      summary: 管理员上传图书封面
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200": { description: result }
+  /kind/list:
+    get:
+      tags: [Kind]
+      security: []
+      summary: 分类列表（Redis 缓存 5 分钟）
+      responses:
+        "200": { description: result }
+  /kind/save:
+    post:
+      tags: [Kind, Admin]
+      summary: 新增/编辑分类
+      responses:
+        "200": { description: result }
+  /kind/remove:
+    post:
+      tags: [Kind, Admin]
+      summary: 删除分类
+      responses:
+        "200": { description: result }
+  /shop/list/{kid}:
+    get:
+      tags: [Shop]
+      security: []
+      summary: 分类下店铺
+      parameters:
+        - { name: kid, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /shop/listAll:
+    get:
+      tags: [Shop]
+      security: []
+      summary: 全部店铺
+      responses:
+        "200": { description: result }
+  /shop/sdetail:
+    get:
+      tags: [Shop]
+      security: []
+      summary: 店铺详情
+      parameters:
+        - { name: sid, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /shop/save:
+    post:
+      tags: [Shop, Admin]
+      summary: 新增/编辑店铺
+      responses:
+        "200": { description: result }
+  /shop/remove:
+    post:
+      tags: [Shop, Admin]
+      summary: 删除店铺
+      responses:
+        "200": { description: result }
+  /comment/listByBid:
+    get:
+      tags: [Comment]
+      security:
+        - {}
+        - bearerAuth: []
+      summary: 图书评论，携带 token 时返回 liked
+      parameters:
+        - { name: bid, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /comment/save:
+    post:
+      tags: [Comment]
+      summary: 发表评论，score 缺省 5
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [bid, content]
+              properties:
+                bid: { type: integer }
+                content: { type: string }
+                score: { type: integer, minimum: 1, maximum: 5 }
+                oid: { type: integer }
+      responses:
+        "200": { description: result }
+  /comment/listByUid:
+    get:
+      tags: [Comment]
+      summary: 本人/管理员查询评论
+      responses:
+        "200": { description: result }
+  /comment/remove:
+    post:
+      tags: [Comment]
+      summary: 本人或管理员删除评论
+      responses:
+        "200": { description: result }
+  /comment/like:
+    post:
+      tags: [Comment]
+      summary: 点赞（幂等）
+      responses:
+        "200": { description: result }
+  /comment/unlike:
+    post:
+      tags: [Comment]
+      summary: 取消点赞（幂等）
+      responses:
+        "200": { description: result }
+  /comment/reply:
+    post:
+      tags: [Comment, Admin]
+      summary: 管理员回复评论并通知评论者
+      responses:
+        "200": { description: result }
+  /comment/listAll:
+    get:
+      tags: [Comment, Admin]
+      summary: 管理员全量评论
+      responses:
+        "200": { description: result }
+  /order/save:
+    post:
+      tags: [Order]
+      summary: 下单，支持 requestId 幂等
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [bid, name, tel, addr]
+              properties:
+                bid: { type: integer }
+                num: { type: integer }
+                name: { type: string }
+                tel: { type: string }
+                addr: { type: string }
+                requestId: { type: string, maxLength: 64 }
+      responses:
+        "200": { description: result }
+  /order/listByUid:
+    get:
+      tags: [Order]
+      summary: 本人/管理员分页订单
+      responses:
+        "200": { description: result }
+  /order/detail:
+    get:
+      tags: [Order]
+      summary: 本人/管理员订单详情
+      parameters:
+        - { name: oid, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: result }
+  /order/pay:
+    post:
+      tags: [Order]
+      summary: 沙箱付款并写支付记录
+      responses:
+        "200": { description: result, content: { application/json: { schema: { $ref: "#/components/schemas/Result" } } } }
+  /order/refund:
+    post:
+      tags: [Order]
+      summary: 已付款未发货订单退款
+      responses:
+        "200": { description: result }
+  /order/cancel:
+    post:
+      tags: [Order]
+      summary: 取消待付款/已付款订单
+      responses:
+        "200": { description: result }
+  /order/ship:
+    post:
+      tags: [Order, Admin]
+      summary: 管理员发货并记录物流
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                oid: { type: integer }
+                logisticsCompany: { type: string }
+                logisticsNo: { type: string }
+      responses:
+        "200": { description: result }
+  /order/confirm:
+    post:
+      tags: [Order]
+      summary: 买家确认收货
+      responses:
+        "200": { description: result }
+  /order/remove:
+    post:
+      tags: [Order]
+      summary: 删除终态订单
+      responses:
+        "200": { description: result }
+  /order/listAll:
+    get:
+      tags: [Order, Admin]
+      summary: 管理员分页全部订单
+      responses:
+        "200": { description: result }
+  /favorite/save:
+    post:
+      tags: [Favorite]
+      summary: 收藏图书（幂等）
+      responses:
+        "200": { description: result }
+  /favorite/remove:
+    post:
+      tags: [Favorite]
+      summary: 取消收藏
+      responses:
+        "200": { description: result }
+  /favorite/check:
+    get:
+      tags: [Favorite]
+      summary: 检查是否已收藏
+      responses:
+        "200": { description: result }
+  /favorite/listByUid:
+    get:
+      tags: [Favorite]
+      summary: 收藏列表
+      responses:
+        "200": { description: result }
+  /cart/add:
+    post:
+      tags: [Cart]
+      summary: 加入购物车
+      responses:
+        "200": { description: result }
+  /cart/updateNum:
+    post:
+      tags: [Cart]
+      summary: 修改购物车数量
+      responses:
+        "200": { description: result }
+  /cart/remove:
+    post:
+      tags: [Cart]
+      summary: 移除购物车条目
+      responses:
+        "200": { description: result }
+  /cart/list:
+    get:
+      tags: [Cart]
+      summary: 购物车列表
+      responses:
+        "200": { description: result }
+  /cart/checkout:
+    post:
+      tags: [Cart]
+      summary: 事务结算购物车，支持 requestId 幂等
+      responses:
+        "200": { description: result }
+  /address/list:
+    get:
+      tags: [Address]
+      summary: 当前用户地址簿
+      responses:
+        "200": { description: result }
+  /address/save:
+    post:
+      tags: [Address]
+      summary: 新增/编辑地址，新增最多 20 条
+      responses:
+        "200": { description: result }
+  /address/remove:
+    post:
+      tags: [Address]
+      summary: 删除地址
+      responses:
+        "200": { description: result }
+  /address/setDefault:
+    post:
+      tags: [Address]
+      summary: 设置唯一默认地址
+      responses:
+        "200": { description: result }
+  /notification/list:
+    get:
+      tags: [Notification]
+      summary: 当前用户通知分页
+      responses:
+        "200": { description: result }
+  /notification/read:
+    post:
+      tags: [Notification]
+      summary: 标记通知已读
+      responses:
+        "200": { description: result }
+  /notification/unreadCount:
+    get:
+      tags: [Notification]
+      summary: 当前用户未读数
+      responses:
+        "200": { description: result }
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: 管理看板统计
+      responses:
+        "200": { description: result }
+  /admin/logs:
+    get:
+      tags: [Admin]
+      summary: 管理操作日志分页
+      responses:
+        "200": { description: result }
+  /pic/{filename}:
+    get:
+      tags: [Pic]
+      security: []
+      summary: 图片流式访问
+      parameters:
+        - { name: filename, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: image
+          content:
+            image/*:
+              schema: { type: string, format: binary }
