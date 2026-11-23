@@ -97,7 +97,6 @@ public class SpringMvcConfig implements WebMvcConfigurer {
                         "/shop/listAll",
                         "/shop/sdetail",
                         "/pic/**",
-                        "/book/hotWords",
                         "/index.jsp",
                         "/favicon.ico",
                         "/error"

@@ -186,7 +186,8 @@ const submitCheckout=async()=>{
 .img img{
     width: 100%;
     height: 90px;
-    object-fit: cover;
+    object-fit: contain;
+    background: #f2f3f5;
 }
 .info{
     padding-left: 10px;

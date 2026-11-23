@@ -27,9 +27,13 @@ await q("delete from kind where content like '冒烟%'");
 for (const t of ['operation_log', 'search_log', 'reset_code']) {
   await q(`delete from ${t}`);
 }
-// 自增序复位
-const seq = { user: 3, order: 4, book: 6, kind: 6, shop: 4, comment: 4 };
+// 自增序复位（book/shop/kind 按现有最大主键 +1，兼容全量演示数据）
+const seq = { user: 3, order: 4, comment: 4 };
 for (const [t, n] of Object.entries(seq)) await q(`alter table \`${t}\` auto_increment=${n}`);
+for (const [t, pk] of Object.entries({ book: 'bid', shop: 'sid', kind: 'kid' })) {
+  const r = await q(`select coalesce(max(${pk}),0)+1 n from ${t}`);
+  await q(`alter table \`${t}\` auto_increment=${r[0].n}`);
+}
 
 const counts = await q(`select
   (select count(*) from user) users, (select count(*) from \`order\`) orders,

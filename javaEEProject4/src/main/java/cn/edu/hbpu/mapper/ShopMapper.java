@@ -12,10 +12,10 @@ import java.util.List;
 * @Entity generator.pojo.Shop
 */
 public interface ShopMapper {
-    @Select("select sid,`name`,logo,score from shop where kid=#{kid} order by sid desc ")
+    @Select("select sid,`name`,logo,picture,score,description,kid from shop where kid=#{kid} order by sid desc ")
     List<Shop> selectBykid(Integer kid);
 
-    @Select("select sid,`name`,logo,score from shop where sid=#{sid}")
+    @Select("select sid,`name`,logo,picture,score,description,kid from shop where sid=#{sid}")
     Shop getBySidPrimary(Integer sid);
 
     /**

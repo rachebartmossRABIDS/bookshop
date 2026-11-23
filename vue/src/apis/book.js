@@ -36,6 +36,3 @@ export function uploadBookImageService(file){
     formData.append('file',file)
     return instance.post('/book/uploadImage',formData);
 }
-export function hotWordsService(){
-    return instance.get('/book/hotWords');
-}

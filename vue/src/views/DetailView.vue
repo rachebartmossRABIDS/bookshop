@@ -165,37 +165,38 @@ const addToCart=async()=>{
     await cartAddService({bid, num:1})
     showNotify({type:'success', message:'已加入购物车'})
 }
-const goCart=()=>{
-    router.push('/cart')
-}
 const activeNames = ref(['1']);
 const user=ref({});
 </script>
 
 
 <template>
-    <div>
+    <div class="page">
         <van-nav-bar
-        title=""
+        title="书籍详情"
         left-text="返回"
         left-arrow
         @click-left="goBack"
         />
-        <van-space direction="vertical" fill>
-        <img :src="picIp+book.image">   
-        <div class="price-row">
-            <div class="price">书籍价格：￥{{ book.price }}</div>
-            <van-button size="small" :icon="isFav?'star':'star-o'" :type="isFav?'warning':'default'" @click="toggleFavorite">{{ isFav?'已收藏':'收藏' }}</van-button>
+        <div class="cover-card">
+            <img :src="picIp+(book.image||'default.png')">
         </div>
-        <div>书籍名称：{{book.name}}</div>
-        <div>作者：{{book.author}}</div>
-        <div :key="book.id " @click="goSDetail(book)" style="color: blue;">店铺信息<van-icon name="arrow" /></div>
-        <div class="stock">剩余库存：{{ book.inventory }}</div>
-        <van-action-bar>
-            <van-action-bar-icon icon="cart-o" text="购物车" @click="goCart" />
-            <van-action-bar-button type="warning" text="加入购物车" @click="addToCart" />
-            <van-action-bar-button type="danger" text="立即购买" @click="openOrder" />
-        </van-action-bar>
+        <div class="info-card">
+            <div class="book-name">{{ book.name }}</div>
+            <div class="book-author">作者：{{ book.author }}</div>
+            <div class="price-row">
+                <div class="price">￥{{ book.price }}</div>
+                <div class="stock">剩余库存：{{ book.inventory }}</div>
+            </div>
+            <div class="shop-row">
+                <van-button size="small" icon="shop-o" plain type="primary" @click="goSDetail(book)">进入店铺</van-button>
+                <van-button size="small" :icon="isFav?'star':'star-o'" :type="isFav?'warning':'default'" plain @click="toggleFavorite">{{ isFav?'已收藏':'收藏' }}</van-button>
+            </div>
+            <div class="buy-row">
+                <van-button class="buy-btn" type="warning" @click="addToCart">加入购物车</van-button>
+                <van-button class="buy-btn" type="danger" @click="openOrder">立即购买</van-button>
+            </div>
+        </div>
         <van-popup v-model:show="showOrder" position="bottom" round>
             <van-form @submit="sendOrder">
                 <div v-if="addresses.length" class="address-picker">
@@ -229,7 +230,6 @@ const user=ref({});
        </div>
     </van-collapse-item>
   </van-collapse>
-    </van-space>   
         <div class="title">用户评价信息</div>
         <div class="comment">
             <van-row v-for="item in comments" :key="item.cid">
@@ -277,6 +277,38 @@ const user=ref({});
 
 
 <style scoped>
+.page{
+    padding-bottom: 16px;
+}
+.cover-card{
+    margin: 10px 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f2f3f5;
+}
+.cover-card img{
+    width: 100%;
+    height: 240px;
+    object-fit: contain;
+    display: block;
+}
+.info-card{
+    margin: 0 12px 12px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.book-name{
+    font-size: 20px;
+    font-weight: bold;
+    color: #323233;
+}
+.book-author{
+    margin-top: 6px;
+    color: #666;
+    font-size: 14px;
+}
 .list{
     color: black;
 }
@@ -291,20 +323,30 @@ const user=ref({});
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-right: 10px;
+    margin-top: 10px;
 }
 .stock{
-    margin: 0 10px;
     color: #666;
-    font-size: 14px;
+    font-size: 13px;
+}
+.shop-row{
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+.buy-row{
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+.buy-row .buy-btn{
+    flex: 1;
+    border-radius: 20px;
 }
 .title{
     font-size: 20px;
     font-weight: bold;
     margin: 10px;
-}
-img{
-    width: 100%;
 }
 .comment .van-row{
     margin: 5px 0;

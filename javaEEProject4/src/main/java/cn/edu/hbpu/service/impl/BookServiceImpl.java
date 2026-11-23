@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +61,6 @@ public class BookServiceImpl implements BookService {
         String keyword = name == null ? "" : name.trim();
         if (!keyword.isEmpty()) {
             searchLogMapper.insert(keyword);
-            cacheService.evict("book:hotWords");
         }
         //调用PageHelper执行分页
         PageHelper.startPage(pageNo,pageSize);//pageNo页码 pageSize每页显示的记录数
@@ -71,18 +68,6 @@ public class BookServiceImpl implements BookService {
         //查询结果封装成PageInfo对象
         PageInfo<Book> pageInfo = new PageInfo<>(books);
         return pageInfo;
-    }
-
-    @Override
-    public List<Map<String, Object>> hotWords() {
-        List<Map<String, Object>> cached = cacheService.get("book:hotWords",
-                new TypeReference<List<Map<String, Object>>>() { });
-        if (cached != null) {
-            return cached;
-        }
-        List<Map<String, Object>> words = searchLogMapper.selectHotWords();
-        cacheService.put("book:hotWords", words, 300);
-        return words;
     }
 
     @Override

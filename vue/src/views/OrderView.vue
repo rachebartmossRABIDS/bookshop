@@ -166,7 +166,9 @@ const getMore=()=>{
 }
 .img img{
     width: 100%;
-    height: 80px;
+    height: 90px;
+    object-fit: contain;
+    background: #f2f3f5;
 }
 .orders{
     border: 1px solid #ddd;

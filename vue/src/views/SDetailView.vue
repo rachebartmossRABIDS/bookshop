@@ -39,7 +39,7 @@ const goDetail=(item)=>{
         @click-left="goBack"
         />
         <van-space direction="vertical" fill>
-        <img :src="picIp+shop.picture">
+        <img :src="picIp+(shop.picture||'default.png')">
         <div>店铺名称：{{shop.name}}</div>
         <div>店铺简介：{{shop.description}}</div>        
     </van-space>

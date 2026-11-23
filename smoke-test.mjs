@@ -465,13 +465,6 @@ check('评论列表展示商家回复',
 check('删除P3评论成功',
   ok(await api('POST', '/comment/remove', { token: newToken, body: { cid: p3Comment.cid } })));
 
-// ---------- P3 搜索历史热词 ----------
-const hotKeyword = '热词测试' + p3tag;
-check('热词接口公开可用', ok(await api('GET', '/book/hotWords')));
-await api('POST', '/book/search', { body: { name: hotKeyword, pageNo: 1, pageSize: 8 } });
-const hotWords = (await api('GET', '/book/hotWords')).json?.data || [];
-check('搜索后热词包含该关键词', hotWords.some(item => item.keyword === hotKeyword), JSON.stringify(hotWords));
-
 // ---------- P3 管理看板与操作日志 ----------
 check('非管理员访问统计被拒绝', bad(await api('GET', '/admin/stats', { token: newToken })));
 check('非管理员访问操作日志被拒绝', bad(await api('GET', '/admin/logs?pageNo=1&pageSize=10', { token: newToken })));

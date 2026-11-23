@@ -14,7 +14,7 @@
 ## 功能
 
 - 用户：注册、登录、修改资料/头像、找回密码、JWT 刷新与即时吊销。
-- 图书与店铺：分类浏览、搜索排序、搜索历史和近 30 天热词、Redis 缓存。
+- 图书与店铺：分类浏览、搜索排序、搜索历史、Redis 缓存。
 - 交易：购物车合并结算、库存原子扣减、订单状态机、沙箱支付、退款、物流信息。
 - 互动：收藏、评分评论、评论点赞、已购徽章、管理员回复。
 - 个人中心：地址簿、订单详情时间线、站内通知与未读角标。
@@ -126,6 +126,13 @@ npm run dev
 
 演示账号仅用于本地/公开演示，生产环境应修改或移除。
 
+### 演示数据
+
+文学 / 计算机 / 历史 / 科学 / 艺术五大板块各 72 本书（共 360 本）、各 8 家店铺（共 40 家）。
+图书封面命名 `b1.jpg`–`b360.jpg`、店铺图 `s1.jpg`–`s40.jpg`，均为程序生成的占位图
+（`node tools/gen-placeholder-images.mjs` 可再生成）；文件名与书名/店名的对照表见
+[`docs/图片需求清单.md`](docs/图片需求清单.md)，替换真实图片按文件名覆盖即可，缺图时前端自动回退默认图。
+
 ## 数据库升级
 
 已初始化数据库请按顺序执行：
@@ -136,9 +143,10 @@ bookshop-p1-migration.sql
 bookshop-p2-migration.sql
 bookshop-p3-migration.sql
 bookshop-p5-migration.sql
+bookshop-p7-migration.sql
 ```
 
-P4/P6 没有数据库结构变更。全新安装直接导入 `bookshop.sql`。
+P4/P6 没有数据库结构变更；P7 为演示数据扩容（360 书 / 40 店）与图片改名，同样无结构变更。全新安装直接导入 `bookshop.sql`。
 
 ## 生产配置
 
@@ -193,7 +201,7 @@ cd vue && npm run build
 node smoke-test.mjs
 ```
 
-当前 HTTP 冒烟共 **228 项断言**，覆盖 P0–P5 主流程、越权、事务回滚、并发状态保护、支付退款、地址上限、评论点赞、通知、找回密码、上传伪造检测和 5 并发幂等。JUnit 5 + Mockito 覆盖订单状态机、购物车失败路径、密码兼容、校验工具、限流窗口和验证码过期。
+当前 HTTP 冒烟共 **226 项断言**，覆盖 P0–P5 主流程、越权、事务回滚、并发状态保护、支付退款、地址上限、评论点赞、通知、找回密码、上传伪造检测和 5 并发幂等。JUnit 5 + Mockito 覆盖订单状态机、购物车失败路径、密码兼容、校验工具、限流窗口和验证码过期。
 
 冒烟会在库中留下测试用户/订单/日志等残留。恢复演示基线：
 
@@ -225,7 +233,7 @@ npx @redocly/cli preview-docs docs/openapi.yaml
 1. **订单状态机与并发控制**：条件更新保证 5 个并发付款请求仅 1 个成功；库存扣减使用带库存条件的原子 SQL。
 2. **购物车事务结算**：每条商品复用订单创建逻辑，任一商品下架/库存不足时订单、库存和购物车全部回滚。
 3. **安全链路**：BCrypt 懒迁移、JWT `token_version` 即时吊销、Redis Lua 限流、图片读取校验、请求幂等键共同覆盖认证、防刷、上传和重复提交风险。
-4. **工程化交付**：228 项 HTTP 自动化检查、JUnit 单测、GitHub Actions、Docker Compose、Redis 降级和 OpenAPI 文档。
+4. **工程化交付**：226 项 HTTP 自动化检查、JUnit 单测、GitHub Actions、Docker Compose、Redis 降级和 OpenAPI 文档。
 
 面试复盘建议：每个亮点准备“为什么这样做、替代方案、并发或故障边界、如何验证”四个问题。
 
@@ -241,6 +249,7 @@ bookshop/
 ├── docker-compose.yml              # MySQL + Redis + backend + nginx
 ├── bookshop.sql                    # 全量初始化
 ├── bookshop-p*-migration.sql       # 增量迁移
+├── tools/                          # 演示占位图生成脚本
 └── smoke-test.mjs                  # HTTP 冒烟测试
 ```
 

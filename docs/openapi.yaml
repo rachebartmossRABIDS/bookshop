@@ -301,13 +301,6 @@ paths:
                 pageSize: { type: integer }
       responses:
         "200": { description: result }
-  /book/hotWords:
-    get:
-      tags: [Book]
-      security: []
-      summary: 近 30 天 Top10 搜索热词
-      responses:
-        "200": { description: result }
   /book/save:
     post:
       tags: [Book, Admin]

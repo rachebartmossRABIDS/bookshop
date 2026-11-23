@@ -1,9 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 const content=ref('')
 import { showNotify } from 'vant';
 import { useRoute,useRouter } from 'vue-router';
-import { hotWordsService } from '../apis/book';
 const historyKey='bookshop_search_history'
 const readHistory=()=>{
     try {
@@ -14,7 +13,6 @@ const readHistory=()=>{
     }
 }
 const history=ref(readHistory())
-const hotWords=ref([])
 const remember=(keyword)=>{
     const word=String(keyword||'').trim()
     if(!word) return
@@ -44,14 +42,6 @@ const clearHistory=()=>{
     history.value=[]
     localStorage.removeItem(historyKey)
 }
-onMounted(async()=>{
-    try {
-        const result=await hotWordsService()
-        hotWords.value=result.data || []
-    } catch {
-        hotWords.value=[]
-    }
-})
 </script>
 
 <template>
@@ -85,12 +75,6 @@ onMounted(async()=>{
             <van-button v-for="word in history" :key="word" size="mini" round plain @click="searchWord(word)">{{ word }}</van-button>
         </div>
         <div v-else class="empty-tip">暂无搜索历史</div>
-        <div class="panel-head hot-title"><strong>热门搜索</strong></div>
-        <div class="tags" v-if="hotWords.length">
-            <van-button v-for="word in hotWords" :key="word.keyword" size="mini" round type="danger" plain
-                @click="searchWord(word.keyword)">{{ word.keyword }}</van-button>
-        </div>
-        <div v-else class="empty-tip">暂无热词</div>
         <van-back-top right="5vw" bottom="5vh"/>
       </div>
       <router-view/>      
@@ -132,9 +116,6 @@ onMounted(async()=>{
 .panel-head span{
     color:#1989fa;
     font-size:13px;
-}
-.hot-title{
-    margin-top:24px;
 }
 .tags{
     display:flex;

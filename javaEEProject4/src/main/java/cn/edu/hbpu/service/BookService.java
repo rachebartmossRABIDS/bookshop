@@ -4,7 +4,6 @@ import cn.edu.hbpu.pojo.Book;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
-import java.util.Map;
 
 public interface BookService {
     public List<Book> listByKid(Integer kid);
@@ -17,6 +16,4 @@ public interface BookService {
 
     /** 管理员删除图书（存在订单/评论/收藏引用时拒绝） */
     int remove(Integer bid);
-
-    List<Map<String, Object>> hotWords();
 }

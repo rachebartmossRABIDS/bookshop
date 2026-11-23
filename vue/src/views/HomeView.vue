@@ -89,7 +89,10 @@ const goSearch=()=>{
 }
 .img img{
     width: 100%;
-    height: 150px;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    display: block;
 }
 .list .van-row{
     margin: 0px 0;

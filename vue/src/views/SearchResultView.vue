@@ -133,7 +133,10 @@ const picIp=usePicStore().picIp
 }
 .img img{
     width: 100%;
-    height: 80px;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    display: block;
 }
 .van-swipe-item img{
     width: 100%;

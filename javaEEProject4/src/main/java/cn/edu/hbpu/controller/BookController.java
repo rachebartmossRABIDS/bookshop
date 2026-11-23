@@ -38,11 +38,6 @@ public class BookController {
         PageInfo<Book> pageInfo = bookService.selectByName(name, sort, pageNo, pageSize);
         return Result.success(pageInfo);
     }
-    @GetMapping("/hotWords")
-    public Result hotWords() {
-        return Result.success(bookService.hotWords());
-    }
-
     @PostMapping("/save")
     public Result save(Book book) {
         Boolean result = bookService.save(book);
